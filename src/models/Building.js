@@ -25,19 +25,58 @@ const LocationSchema = new mongoose.Schema(
 
 const BuildingSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, trim: true, maxlength: 100 },
-    address: { type: String, required: true, trim: true, maxlength: 200 },
-    location: { type: LocationSchema, required: true },
-    accessNotes: { type: String, trim: true, maxlength: 500 },
-    keyAccessCodes: { type: String, trim: true, maxlength: 100 },
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 100,
+    },
+
+    address: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 200,
+    },
+
+    location: {
+      type: LocationSchema,
+      required: true,
+    },
+
+    accessNotes: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+    },
+
+    keyAccessCodes: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+    },
+
     contacts: [ContactSchema],
-    notes: { type: String, trim: true, maxlength: 1000 },
-    assignedInspector: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+
+    notes: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
+    },
+
+    // 🔥 NEW: The inspector who created this building
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
     status: {
       type: String,
       enum: ["unchecked", "checked", "dueSoon"],
       default: "unchecked",
     },
+
     lastVisitedDate: Date,
   },
   { timestamps: true }

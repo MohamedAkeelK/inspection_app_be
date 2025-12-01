@@ -8,81 +8,105 @@ import Building from "./models/Building.js";
 dotenv.config();
 connectDB();
 
+// Helper functions to generate random data
+const randomStatus = () => {
+  const statuses = ["unchecked", "checked", "dueSoon"];
+  return statuses[Math.floor(Math.random() * statuses.length)];
+};
+
+const randomDate = () => {
+  const start = new Date(2023, 0, 1);
+  const end = new Date();
+  return new Date(
+    start.getTime() + Math.random() * (end.getTime() - start.getTime())
+  );
+};
+
+const randomCode = () => {
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const numbers = "0123456789";
+  return (
+    letters[Math.floor(Math.random() * letters.length)] +
+    letters[Math.floor(Math.random() * letters.length)] +
+    numbers[Math.floor(Math.random() * numbers.length)] +
+    numbers[Math.floor(Math.random() * numbers.length)]
+  );
+};
+
+const randomPhone = () =>
+  `555-${Math.floor(100 + Math.random() * 900)}-${Math.floor(
+    1000 + Math.random() * 9000
+  )}`;
+
+const randomContact = () => ({
+  name: `Contact ${Math.floor(Math.random() * 100)}`,
+  phone: randomPhone(),
+  email: `contact${Math.floor(Math.random() * 100)}@example.com`,
+  role: ["super", "manager", "security"][Math.floor(Math.random() * 3)],
+});
+
 const seedData = async () => {
   try {
     // Clear existing data
     await User.deleteMany();
     await Building.deleteMany();
-
     console.log("Old data cleared");
 
-    // Create sample users
-    const hashedPassword = await bcrypt.hash("password123", 10);
-
-    const inspector1 = await User.create({
-      name: "John Doe",
-      email: "john@example.com",
-      password: hashedPassword,
-      role: "inspector",
-      phone: "555-111-2222",
-    });
-    console.log("Inspector 1 created");
-
-    const inspector2 = await User.create({
-      name: "Jane Smith",
-      email: "jane@example.com",
-      password: hashedPassword,
-      role: "inspector",
-      phone: "555-333-4444",
-    });
-    console.log("Inspector 2 created");
-
-    // Create sample buildings
-    const buildingsData = [
+    // Create 3 inspector users
+    const usersData = [
       {
-        name: "Main Street Apartments",
-        address: "123 Main St, New York, NY",
-        location: { lat: 40.7128, lng: -74.006 },
-        accessNotes: "Call the super before entering",
-        keyAccessCodes: "A123",
-        assignedInspector: inspector1._id,
-        status: "unchecked",
+        name: "Alice Johnson",
+        email: "alice@example.com",
+        password: "password123",
+        phone: randomPhone(),
       },
       {
-        name: "Broadway Tower",
-        address: "456 Broadway, New York, NY",
-        location: { lat: 40.715, lng: -74.009 },
-        accessNotes: "Main door code is 5678",
-        keyAccessCodes: "B567",
-        assignedInspector: inspector2._id,
-        status: "unchecked",
+        name: "Bob Smith",
+        email: "bob@example.com",
+        password: "password123",
+        phone: randomPhone(),
       },
       {
-        name: "Central Office",
-        address: "789 Central Ave, New York, NY",
-        location: { lat: 40.71, lng: -74.012 },
-        accessNotes: "Security desk on first floor",
-        keyAccessCodes: "C890",
-        assignedInspector: inspector1._id,
-        status: "dueSoon",
-      },
-      {
-        name: "Eastside Warehouse",
-        address: "321 East St, New York, NY",
-        location: { lat: 40.718, lng: -74.002 },
-        accessNotes: "Ring the bell, they will let you in",
-        keyAccessCodes: "D234",
-        assignedInspector: inspector2._id,
-        status: "checked",
+        name: "Charlie Brown",
+        email: "charlie@example.com",
+        password: "password123",
+        phone: randomPhone(),
       },
     ];
 
-    for (const building of buildingsData) {
-      try {
-        await Building.create(building);
+    const users = [];
+    for (const u of usersData) {
+      const user = await User.create(u);
+      users.push(user);
+      console.log(`User created: ${user.name}`);
+    }
+
+    // Create 10 buildings for each user
+    for (const user of users) {
+      for (let i = 1; i <= 10; i++) {
+        const building = await Building.create({
+          name: `Building ${i} - ${user.name.split(" ")[0]}`,
+          address: `${100 + i} ${
+            ["Main", "Broadway", "Central", "East", "West"][i % 5]
+          } St, New York, NY`,
+          location: {
+            lat: 40.7 + Math.random() * 0.02, // random nearby latitude
+            lng: -74 + Math.random() * 0.02, // random nearby longitude
+          },
+          accessNotes: [
+            "Call super",
+            "Main door code",
+            "Security desk first floor",
+            "Ring bell",
+          ][i % 4],
+          keyAccessCodes: randomCode(),
+          contacts: [randomContact(), randomContact()],
+          notes: `This is note ${i} for ${user.name}`,
+          createdBy: user._id,
+          status: randomStatus(),
+          lastVisitedDate: randomDate(),
+        });
         console.log(`Building created: ${building.name}`);
-      } catch (err) {
-        console.error(`Error creating building ${building.name}:`, err.message);
       }
     }
 
